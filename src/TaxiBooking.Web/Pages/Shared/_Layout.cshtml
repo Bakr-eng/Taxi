@@ -1,0 +1,95 @@
+@inject SignInManager<AppUser> SignInManager
+@inject UserManager<AppUser> UserManager
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - TaxiBooking</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-md navbar-dark mb-4">
+            <div class="container">
+                <a class="navbar-brand fw-bold" asp-page="/Index">🚕 TaxiBooking</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="mainNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item"><a class="nav-link" asp-page="/Index">Hem</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-page="/About">Om oss</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-page="/Contact">Kontakt</a></li>
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            @if (User.IsInRole("Driver") && !User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item"><a class="nav-link" asp-page="/DriverPortal/Index">Mina körningar</a></li>
+                            }
+                            else
+                            {
+                                <li class="nav-item"><a class="nav-link" asp-page="/User/Bookings/Index">Mina bokningar</a></li>
+                            }
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item"><a class="nav-link" asp-page="/Admin/Bookings/Manage">Hantera bokningar</a></li>
+                                <li class="nav-item"><a class="nav-link" asp-page="/Admin/Drivers/Index">Förare</a></li>
+                                <li class="nav-item"><a class="nav-link" asp-page="/Admin/Cars/Index">Bilar</a></li>
+                            }
+                        }
+                    </ul>
+                    <ul class="navbar-nav">
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <li class="nav-item d-flex align-items-center me-3 text-light">
+                                Inloggad som <strong class="ms-1">@User.Identity?.Name</strong>
+                            </li>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item">
+                                    @* <a class="nav-link" asp-page="/Admin/Account/ChangePassword">Ändra lösenord</a> *@
+                                </li>
+                            }
+                            <li class="nav-item">
+                                <form id="logoutForm" method="post" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/Index", new { area = "" })">
+                                    <button type="submit" class="btn btn-outline-warning btn-sm">Logga ut</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item"><a class="nav-link" href="/Identity/Account/Register">Registrera</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/Identity/Account/Login">Logga in</a></li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        @if (TempData["StatusMessage"] is string statusMessage && !string.IsNullOrEmpty(statusMessage))
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @statusMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        <main role="main">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted mt-5">
+        <div class="container py-3">
+            &copy; @DateTime.Now.Year - TaxiBooking
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

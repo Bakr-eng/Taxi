@@ -1,0 +1,96 @@
+@page
+@model TaxiBooking.Web.Pages.Admin.Drivers.IndexModel
+@{
+    ViewData["Title"] = "Förare";
+}
+
+<h1>Förare</h1>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h2 class="h5">Lägg till ny förare</h2>
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form method="post" asp-page-handler="Create" class="row g-3">
+            <div class="col-md-4">
+                <label asp-for="Input.Name" class="form-label"></label>
+                <input asp-for="Input.Name" class="form-control" />
+                <span asp-validation-for="Input.Name" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Input.Email" class="form-label"></label>
+                <input asp-for="Input.Email" class="form-control" />
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Input.Password" class="form-label"></label>
+                <input asp-for="Input.Password" class="form-control" />
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Input.PhoneNumber" class="form-label"></label>
+                <input asp-for="Input.PhoneNumber" class="form-control" />
+                <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Input.LicenseNumber" class="form-label"></label>
+                <input asp-for="Input.LicenseNumber" class="form-control" />
+                <span asp-validation-for="Input.LicenseNumber" class="text-danger"></span>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Lägg till förare</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (!Model.Drivers.Any())
+{
+    <p class="text-muted">Inga förare registrerade än.</p>
+}
+else
+{
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Namn</th>
+                <th>E-post (inloggning)</th>
+                <th>Telefon</th>
+                <th>Körkortsnummer</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var d in Model.Drivers)
+            {
+                <tr>
+                    <td>@d.Name</td>
+                    <td>@(d.User?.Email ?? "-")</td>
+                    <td>@d.PhoneNumber</td>
+                    <td>@d.LicenseNumber</td>
+                    <td>
+                        @if (d.IsAvailable)
+                        {
+                            <span class="status-badge status-confirmed">Tillgänglig</span>
+                        }
+                        else
+                        {
+                            <span class="status-badge status-cancelled">Upptagen</span>
+                        }
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group">
+                            <form method="post" asp-page-handler="Toggle" asp-route-id="@d.Id">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">Byt status</button>
+                            </form>
+                            <form method="post" asp-page-handler="Delete" asp-route-id="@d.Id"
+                                  onsubmit="return confirmDelete('Radera denna förare permanent?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Radera</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

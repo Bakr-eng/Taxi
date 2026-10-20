@@ -1,0 +1,121 @@
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+body {
+    margin-bottom: 60px;
+}
+
+/* Navbar */
+.navbar {
+    background-color: #1a1a2e !important;
+}
+
+.navbar-brand, .nav-link {
+    color: #f0c040 !important;
+}
+
+/* Booking card */
+.booking-card {
+    border-left: 4px solid #f0c040;
+    transition: background-color 0.15s;
+}
+
+    .booking-card:hover {
+        background-color: #f8f9fa;
+    }
+
+.status-badge {
+    font-size: 0.8rem;
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.status-pending {
+    background-color: #ffc107;
+    color: #000;
+}
+
+.status-confirmed {
+    background-color: #0d6efd;
+    color: #fff;
+}
+
+.status-completed {
+    background-color: #198754;
+    color: #fff;
+}
+
+.status-cancelled {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+/* Bokningskarta */
+.map-container {
+    height: 320px;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    z-index: 0;
+}
+
+.autocomplete-wrapper {
+    position: relative;
+}
+
+.autocomplete-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    max-height: 220px;
+    overflow-y: auto;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+.autocomplete-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+    .autocomplete-item:hover {
+        background-color: #fff8e1;
+    }
+
+.price-estimate-box {
+    background-color: #1a1a2e;
+    color: #fff;
+    border-radius: 8px;
+    padding: 10px 14px;
+}
+
+    .price-estimate-box .text-muted {
+        color: #cbd5e1 !important;
+    }
+
+    .price-estimate-box .fs-4 {
+        color: #f0c040;
+    }
+
+    
+.price-breakdown .price-total td {
+    background-color: #f0c040;
+    color: #1a1a2e;
+    font-weight: 700;
+    font-size: 1.15rem;
+    padding: 6px 8px;
+    border-radius: 4px;
+}

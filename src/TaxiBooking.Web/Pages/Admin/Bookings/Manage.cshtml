@@ -1,0 +1,105 @@
+@page
+@model TaxiBooking.Web.Pages.Admin.Bookings.ManageModel
+@{
+    ViewData["Title"] = "Hantera bokningar";
+}
+
+<h1>Hantera bokningar</h1>
+
+@if (!Model.AllBookings.Any())
+{
+    <p class="text-muted">Det finns inga bokningar ännu.</p>
+}
+else
+{
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Kund</th>
+                <th>Resa</th>
+                <th>Upphämtning</th>
+                <th>Behov/meddelande</th>
+                <th>Pris</th>
+                <th>Status</th>
+                <th>Förare</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var b in Model.AllBookings)
+            {
+                var statusClass = b.Status switch
+                {
+                    BookingStatus.Pending => "status-pending",
+                    BookingStatus.Confirmed => "status-confirmed",
+                    BookingStatus.Completed => "status-completed",
+                    BookingStatus.Cancelled => "status-cancelled",
+                    _ => "status-pending"
+                };
+                <tr>
+                    <td>@b.Id</td>
+                    <td>
+                        @(string.IsNullOrWhiteSpace(b.ContactName) ? (b.User?.Name ?? b.UserId) : b.ContactName)
+                        <div class="text-muted small">@b.ContactPhone</div>
+                        <div class="text-muted small">@b.ContactEmail</div>
+                    </td>
+                    <td>@b.PickupAddress &rarr; @b.DropoffAddress</td>
+                    <td class="small">@b.PickupTime.ToString("g")</td>
+                    <td class="small">
+                        @if (b.HasAllergy) { <span class="badge text-bg-warning me-1">Allergi</span> }
+                        @if (b.HasIllness) { <span class="badge text-bg-warning me-1">Sjukdom/assistans</span> }
+                        @if (!string.IsNullOrWhiteSpace(b.SpecialNeedsNote)) { <div class="text-muted">@b.SpecialNeedsNote</div> }
+                        @if (!string.IsNullOrWhiteSpace(b.Message)) { <div class="fst-italic">"@b.Message"</div> }
+                    </td>
+                    <td>@b.EstimatedFare.ToString("0.00") kr</td>
+                    <td><span class="status-badge @statusClass">@b.Status</span></td>
+                    <td>
+                        @if (b.Driver != null)
+                        {
+                            @b.Driver.Name
+                        }
+                        else if (b.Status == BookingStatus.Pending)
+                        {
+                            <form method="post" asp-page-handler="Assign" class="d-flex gap-2">
+                                <input type="hidden" name="bookingId" value="@b.Id" />
+                                <select name="driverId" class="form-select form-select-sm" required>
+                                    <option value="">Välj förare...</option>
+                                    @foreach (var d in Model.AvailableDrivers)
+                                    {
+                                        <option value="@d.Id">@d.Name</option>
+                                    }
+                                </select>
+                                <button type="submit" class="btn btn-sm btn-primary">Tilldela</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group">
+                            @if (b.Status == BookingStatus.Confirmed)
+                            {
+                                <form method="post" asp-page-handler="SetStatus" asp-route-id="@b.Id" asp-route-status="@BookingStatus.Completed">
+                                    <button type="submit" class="btn btn-sm btn-success">Slutför</button>
+                                </form>
+                            }
+                            @if (b.Status is BookingStatus.Pending or BookingStatus.Confirmed)
+                            {
+                                <form method="post" asp-page-handler="SetStatus" asp-route-id="@b.Id" asp-route-status="@BookingStatus.Cancelled">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Avboka</button>
+                                </form>
+                            }
+                            <form method="post" asp-page-handler="Delete" asp-route-id="@b.Id"
+                                  onsubmit="return confirmDelete('Radera denna bokning permanent?');">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">Radera</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

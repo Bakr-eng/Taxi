@@ -1,0 +1,366 @@
+@page
+@model TaxiBooking.Web.Pages.User.Bookings.IndexModel
+@{
+    ViewData["Title"] = "Mina bokningar";
+}
+
+<h1>Boka en taxi</h1>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form method="post" asp-page-handler="Create" class="row g-3">
+            <div class="col-12"><h2 class="h6 text-muted mb-0">Dina kontaktuppgifter</h2></div>
+            <div class="col-md-4">
+                <label asp-for="Input.ContactName" class="form-label"></label>
+                <input asp-for="Input.ContactName" class="form-control" placeholder="För- och efternamn" />
+                <span asp-validation-for="Input.ContactName" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Input.ContactPhone" class="form-label"></label>
+                <input asp-for="Input.ContactPhone" class="form-control" placeholder="T.ex. 070-123 45 67" />
+                <span asp-validation-for="Input.ContactPhone" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Input.ContactEmail" class="form-label"></label>
+                <input asp-for="Input.ContactEmail" class="form-control" placeholder="namn@exempel.se" />
+                <span asp-validation-for="Input.ContactEmail" class="text-danger"></span>
+            </div>
+
+            <div class="col-12 mt-4"><h2 class="h6 text-muted mb-0">Resan</h2></div>
+            <div class="col-md-6">
+                <label asp-for="Input.PickupAddress" class="form-label"></label>
+                <div class="autocomplete-wrapper">
+                    <input asp-for="Input.PickupAddress" id="pickupInput" class="form-control" placeholder="T.ex. Kista Torg 1" autocomplete="off" />
+                    <div id="pickupSuggestions" class="autocomplete-list d-none"></div>
+                </div>
+                <span asp-validation-for="Input.PickupAddress" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Input.DropoffAddress" class="form-label"></label>
+                <div class="autocomplete-wrapper">
+                    <input asp-for="Input.DropoffAddress" id="dropoffInput" class="form-control" placeholder="T.ex. Arlanda flygplats" autocomplete="off" />
+                    <div id="dropoffSuggestions" class="autocomplete-list d-none"></div>
+                </div>
+                <span asp-validation-for="Input.DropoffAddress" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Önskad upphämtningstid</label>
+                <div class="row g-2">
+                    <div class="col-5">
+                        <label asp-for="Input.PickupDate" class="form-label small text-muted"></label>
+                        <input asp-for="Input.PickupDate" type="date"
+                               min="@Model.MinPickupTime.ToString("yyyy-MM-dd")"
+                               class="form-control" />
+                    </div>
+                    <div class="col-3">
+                        <label asp-for="Input.PickupHour" class="form-label small text-muted"></label>
+                        <select asp-for="Input.PickupHour" class="form-select">
+                            <option value="">--</option>
+                            @for (var h = 0; h < 24; h++)
+                            {
+                                <option value="@h">@h.ToString("00")</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-4">
+                        <label asp-for="Input.PickupMinute" class="form-label small text-muted"></label>
+                        <select asp-for="Input.PickupMinute" class="form-select">
+                            <option value="">--</option>
+                            @for (var m = 0; m < 60; m += 5)
+                            {
+                                <option value="@m">@m.ToString("00")</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <span asp-validation-for="Input.PickupDate" class="text-danger"></span>
+                <span asp-validation-for="Input.PickupHour" class="text-danger"></span>
+                <span asp-validation-for="Input.PickupMinute" class="text-danger"></span>
+                <div class="form-text">24-timmarsformat (t.ex. 14:30). Måste vara en tid som ligger framåt, inte en tid som redan passerat.</div>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <div id="priceEstimateBox" class="price-estimate-box w-100 d-none">
+                    <div class="small text-muted">Avstånd (bilväg) / körtid</div>
+                    <div class="fw-bold" id="distanceText">–</div>
+                    <table class="price-breakdown mt-2 mb-0">
+                        <tr><td>Grundavgift</td><td id="priceBase" class="text-end">–</td></tr>
+                        <tr><td>Sträcka</td><td id="priceKmPart" class="text-end">–</td></tr>
+                        <tr><td>Körtid</td><td id="priceMinPart" class="text-end">–</td></tr>
+                        <tr class="price-total"><td>Totalt</td><td id="priceText" class="text-end">–</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <input type="hidden" asp-for="Input.PickupLat" id="pickupLat" />
+            <input type="hidden" asp-for="Input.PickupLng" id="pickupLng" />
+            <input type="hidden" asp-for="Input.DropoffLat" id="dropoffLat" />
+            <input type="hidden" asp-for="Input.DropoffLng" id="dropoffLng" />
+            <input type="hidden" asp-for="Input.DistanceKm" id="distanceKm" />
+            <input type="hidden" asp-for="Input.DurationMinutes" id="durationMinutes" />
+
+            <div class="col-12">
+                <div id="bookingMap" class="map-container"></div>
+                <div class="form-text">Sök på adresserna ovan så visas rutten och priset här automatiskt.</div>
+            </div>
+
+            <div class="col-12 mt-4"><h2 class="h6 text-muted mb-0">Bra att veta inför resan</h2></div>
+            <div class="col-md-6 d-flex align-items-center">
+                <div class="form-check me-4">
+                    <input asp-for="Input.HasAllergy" class="form-check-input" />
+                    <label asp-for="Input.HasAllergy" class="form-check-label"></label>
+                </div>
+                <div class="form-check">
+                    <input asp-for="Input.HasIllness" class="form-check-input" />
+                    <label asp-for="Input.HasIllness" class="form-check-label"></label>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Input.SpecialNeedsNote" class="form-label"></label>
+                <input asp-for="Input.SpecialNeedsNote" class="form-control" placeholder="T.ex. pälsdjursallergi, rullstol..." />
+            </div>
+            <div class="col-12">
+                <label asp-for="Input.Message" class="form-label"></label>
+                <textarea asp-for="Input.Message" class="form-control" rows="2" placeholder="T.ex. extra bagage, önskemål om barnstol..."></textarea>
+            </div>
+
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Boka</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<h2 class="h4 mb-3">Mina bokningar</h2>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script>
+        (function () {
+            // --- Grundinställningar --------------------------------------------------
+            // PRISMODELL — måste alltid matcha EstimateFare() i Index.cshtml.cs (samma tre värden).
+            const BASE_FARE = 50;        // Fast grundavgift, kr
+            const PRICE_PER_KM = 15;     // Kr per km
+            const PRICE_PER_MINUTE = 5;  // Kr per minuts körtid
+
+            // Startvy: Nyköping (kan justeras om företaget flyttar)
+            const map = L.map('bookingMap').setView([58.7526, 17.0089], 11);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-bidragsgivare'
+            }).addTo(map);
+
+            let pickupMarker = null;
+            let dropoffMarker = null;
+            let routeLine = null;
+
+            const pickupInput = document.getElementById('pickupInput');
+            const dropoffInput = document.getElementById('dropoffInput');
+            const pickupSuggestions = document.getElementById('pickupSuggestions');
+            const dropoffSuggestions = document.getElementById('dropoffSuggestions');
+            const pickupLat = document.getElementById('pickupLat');
+            const pickupLng = document.getElementById('pickupLng');
+            const dropoffLat = document.getElementById('dropoffLat');
+            const dropoffLng = document.getElementById('dropoffLng');
+            const distanceKmField = document.getElementById('distanceKm');
+            const durationMinutesField = document.getElementById('durationMinutes');
+            const priceBox = document.getElementById('priceEstimateBox');
+            const distanceText = document.getElementById('distanceText');
+            const priceBase = document.getElementById('priceBase');
+            const priceKmPart = document.getElementById('priceKmPart');
+            const priceMinPart = document.getElementById('priceMinPart');
+            const priceText = document.getElementById('priceText');
+
+            function formatKr(v) {
+                return Math.round(v) + ' kr';
+            }
+
+            function debounce(fn, delay) {
+                let timer;
+                return function (...args) {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => fn.apply(this, args), delay);
+                };
+            }
+
+            // --- Adressökning (gratis, via OpenStreetMap Nominatim) ------------------
+            async function searchAddress(query) {
+                if (!query || query.trim().length < 3) return [];
+                const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=se&q=' + encodeURIComponent(query);
+                try {
+                    const res = await fetch(url, { headers: { 'Accept-Language': 'sv' } });
+                    if (!res.ok) return [];
+                    return await res.json();
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            function showSuggestions(container, results, onPick) {
+                container.innerHTML = '';
+                if (!results.length) {
+                    container.classList.add('d-none');
+                    return;
+                }
+                results.forEach(r => {
+                    const item = document.createElement('div');
+                    item.className = 'autocomplete-item';
+                    item.textContent = r.display_name;
+                    item.addEventListener('click', () => onPick(r));
+                    container.appendChild(item);
+                });
+                container.classList.remove('d-none');
+            }
+
+            function hideSuggestions(container) {
+                container.classList.add('d-none');
+                container.innerHTML = '';
+            }
+
+            function wireAutocomplete(input, container, latField, lngField, isPickup) {
+                const doSearch = debounce(async () => {
+                    const results = await searchAddress(input.value);
+                    showSuggestions(container, results, (r) => {
+                        input.value = r.display_name;
+                        latField.value = r.lat;
+                        lngField.value = r.lon;
+                        hideSuggestions(container);
+                        placeMarker(isPickup, parseFloat(r.lat), parseFloat(r.lon));
+                        updateRoute();
+                    });
+                }, 600);
+
+                input.addEventListener('input', () => {
+                    // Adressen redigeras för hand igen -> tidigare koordinater/rutt/pris gäller inte längre
+                    latField.value = '';
+                    lngField.value = '';
+                    distanceKmField.value = '';
+                    durationMinutesField.value = '';
+                    priceBox.classList.add('d-none');
+                    doSearch();
+                });
+                input.addEventListener('blur', () => {
+                    setTimeout(() => hideSuggestions(container), 200);
+                });
+            }
+
+            function placeMarker(isPickup, lat, lon) {
+                const latlng = [lat, lon];
+                if (isPickup) {
+                    if (pickupMarker) { pickupMarker.setLatLng(latlng); }
+                    else { pickupMarker = L.marker(latlng).addTo(map).bindPopup('Upphämtning'); }
+                } else {
+                    if (dropoffMarker) { dropoffMarker.setLatLng(latlng); }
+                    else { dropoffMarker = L.marker(latlng).addTo(map).bindPopup('Avlämning'); }
+                }
+                map.setView(latlng, Math.max(map.getZoom(), 12));
+            }
+
+            // --- Rutt och avstånd (gratis, via OSRM:s publika demo-server) -----------
+            async function updateRoute() {
+                if (!pickupLat.value || !pickupLng.value || !dropoffLat.value || !dropoffLng.value) {
+                    return;
+                }
+                const url = `https://router.project-osrm.org/route/v1/driving/${pickupLng.value},${pickupLat.value};${dropoffLng.value},${dropoffLat.value}?overview=full&geometries=geojson`;
+                try {
+                    const res = await fetch(url);
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    if (!data.routes || !data.routes.length) return;
+
+                    const route = data.routes[0];
+                    const km = route.distance / 1000;
+                    const minutes = route.duration / 60;
+                    distanceKmField.value = km.toFixed(2);
+                    durationMinutesField.value = minutes.toFixed(1);
+
+                    const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+                    if (routeLine) { map.removeLayer(routeLine); }
+                    routeLine = L.polyline(coords, { color: '#1a1a2e', weight: 4 }).addTo(map);
+                    map.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
+
+                    const kmCost = PRICE_PER_KM * km;
+                    const minCost = PRICE_PER_MINUTE * minutes;
+                    const total = BASE_FARE + kmCost + minCost;
+
+                    const minutesRounded = Math.round(minutes);
+                    distanceText.textContent = km.toFixed(1).replace('.', ',') + ' km, ca ' + minutesRounded + ' min';
+                    priceBase.textContent = formatKr(BASE_FARE);
+                    priceKmPart.textContent = km.toFixed(1).replace('.', ',') + ' km × ' + PRICE_PER_KM + ' kr = ' + formatKr(kmCost);
+                    priceMinPart.textContent = minutesRounded + ' min × ' + PRICE_PER_MINUTE + ' kr = ' + formatKr(minCost);
+                    priceText.textContent = formatKr(total);
+                    priceBox.classList.remove('d-none');
+                } catch (e) {
+                    // Om ruttjänsten inte svarar visas inget live-pris - servern räknar då
+                    // ett grovt uppskattat pris istället när bokningen skickas in.
+                }
+            }
+
+            wireAutocomplete(pickupInput, pickupSuggestions, pickupLat, pickupLng, true);
+            wireAutocomplete(dropoffInput, dropoffSuggestions, dropoffLat, dropoffLng, false);
+
+            document.addEventListener('click', (e) => {
+                if (!pickupInput.contains(e.target) && !pickupSuggestions.contains(e.target)) hideSuggestions(pickupSuggestions);
+                if (!dropoffInput.contains(e.target) && !dropoffSuggestions.contains(e.target)) hideSuggestions(dropoffSuggestions);
+            });
+        })();
+    </script>
+}
+
+@if (!Model.MyBookings.Any())
+{
+    <p class="text-muted">Du har inga bokningar än.</p>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var b in Model.MyBookings)
+        {
+            var statusClass = b.Status switch
+            {
+                BookingStatus.Pending => "status-pending",
+                BookingStatus.Confirmed => "status-confirmed",
+                BookingStatus.Completed => "status-completed",
+                BookingStatus.Cancelled => "status-cancelled",
+                _ => "status-pending"
+            };
+            <div class="list-group-item booking-card mb-2 p-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="fw-bold">@b.PickupAddress &rarr; @b.DropoffAddress</div>
+                        <div class="text-muted small">Upphämtning: @b.PickupTime.ToString("g")</div>
+                        <div class="text-muted small">Bokad: @b.RequestedAt.ToString("g")</div>
+                        <div>Uppskattat pris: <strong>@b.EstimatedFare.ToString("0.00") kr</strong></div>
+                        @if (b.HasAllergy || b.HasIllness)
+                        {
+                            <div class="small">
+                                @if (b.HasAllergy) { <span class="badge text-bg-warning me-1">Allergi</span> }
+                                @if (b.HasIllness) { <span class="badge text-bg-warning me-1">Sjukdom/assistans</span> }
+                                @if (!string.IsNullOrWhiteSpace(b.SpecialNeedsNote)) { <span class="text-muted">@b.SpecialNeedsNote</span> }
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(b.Message))
+                        {
+                            <div class="small fst-italic">"@b.Message"</div>
+                        }
+                        @if (b.Driver != null)
+                        {
+                            <div class="small">Förare: @b.Driver.Name (@b.Driver.PhoneNumber)</div>
+                        }
+                    </div>
+                    <div class="text-end">
+                        <span class="status-badge @statusClass">@b.Status</span>
+                        @if (b.Status == BookingStatus.Pending)
+                        {
+                            <form method="post" asp-page-handler="Cancel" asp-route-id="@b.Id" class="mt-2"
+                                  onsubmit="return confirmDelete('Vill du avboka den här resan?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Avboka</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

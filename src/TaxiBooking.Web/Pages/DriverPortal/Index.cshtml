@@ -1,0 +1,61 @@
+@page
+@model TaxiBooking.Web.Pages.DriverPortal.IndexModel
+@{
+    ViewData["Title"] = "Mina körningar";
+}
+
+<h1>Mina körningar</h1>
+
+@if (Model.MyDriverProfile == null)
+{
+    <p class="text-muted">Ditt konto är inte kopplat till en förarprofil. Kontakta en administratör.</p>
+}
+else if (!Model.MyBookings.Any())
+{
+    <p class="text-muted">Du har inga tilldelade körningar just nu.</p>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var b in Model.MyBookings)
+        {
+            var statusClass = b.Status switch
+            {
+                BookingStatus.Confirmed => "status-confirmed",
+                BookingStatus.Completed => "status-completed",
+                _ => "status-pending"
+            };
+            <div class="list-group-item booking-card mb-2 p-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="fw-bold">@b.PickupAddress &rarr; @b.DropoffAddress</div>
+                        <div class="small">Upphämtning: <strong>@b.PickupTime.ToString("g")</strong></div>
+                        <div class="small">Kund: @b.ContactName (@b.ContactPhone)</div>
+                        <div>Uppskattat pris: <strong>@b.EstimatedFare.ToString("0.00") kr</strong></div>
+                        @if (b.HasAllergy || b.HasIllness)
+                        {
+                            <div class="small mt-1">
+                                @if (b.HasAllergy) { <span class="badge text-bg-warning me-1">Allergi</span> }
+                                @if (b.HasIllness) { <span class="badge text-bg-warning me-1">Sjukdom/assistans</span> }
+                                @if (!string.IsNullOrWhiteSpace(b.SpecialNeedsNote)) { <span class="text-muted">@b.SpecialNeedsNote</span> }
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(b.Message))
+                        {
+                            <div class="small fst-italic">"@b.Message"</div>
+                        }
+                    </div>
+                    <div class="text-end">
+                        <span class="status-badge @statusClass">@b.Status</span>
+                        @if (b.Status == BookingStatus.Confirmed)
+                        {
+                            <form method="post" asp-page-handler="Complete" asp-route-id="@b.Id" class="mt-2">
+                                <button type="submit" class="btn btn-sm btn-success">Slutför körning</button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

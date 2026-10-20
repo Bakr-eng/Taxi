@@ -1,0 +1,54 @@
+﻿@page
+@model TaxiBooking.Web.Pages.ContactModel
+@{
+    ViewData["Title"] = "Kontakt";
+}
+
+<div class="p-5 mb-4 bg-body-tertiary rounded-3">
+    <div class="container-fluid py-4">
+        <h1 class="display-6 fw-bold">Kontakta oss</h1>
+        <p class="col-md-8 fs-5">
+            Har du frågor om bokning, priser eller vill diskutera ett företagsavtal?
+            Vi svarar gärna.
+        </p>
+    </div>
+</div>
+
+<div class="row g-5 mb-5">
+    <div class="col-md-5">
+        <h2>Kontaktuppgifter</h2>
+        <p class="fs-5 mb-2">📞 <a href="tel:+46700000000">070-000 00 00</a></p>
+        <p class="fs-5 mb-2">✉️ <a href="mailto:info@taxibooking.se">info@taxibooking.se</a></p>
+        <p class="fs-5 mb-2">📍 Nyköping, Sverige</p>
+        <p class="fs-5">🕐 Öppet dygnet runt, alla dagar</p>
+    </div>
+
+    <div class="col-md-7">
+        <h2>Skicka ett meddelande</h2>
+        @if (Model.Sent)
+        {
+            <div class="alert alert-success">Tack för ditt meddelande! Vi återkommer så snart vi kan.</div>
+        }
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form method="post" class="row g-3">
+            <div class="col-md-6">
+                <label asp-for="Input.Name" class="form-label"></label>
+                <input asp-for="Input.Name" class="form-control" />
+                <span asp-validation-for="Input.Name" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Input.Email" class="form-label"></label>
+                <input asp-for="Input.Email" class="form-control" />
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="Input.Message" class="form-label"></label>
+                <textarea asp-for="Input.Message" class="form-control" rows="4"></textarea>
+                <span asp-validation-for="Input.Message" class="text-danger"></span>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary btn-lg">Skicka</button>
+            </div>
+        </form>
+    </div>
+</div>

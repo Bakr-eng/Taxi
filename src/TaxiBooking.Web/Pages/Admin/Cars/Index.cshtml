@@ -1,0 +1,128 @@
+﻿@page
+@model TaxiBooking.Web.Pages.Admin.Cars.IndexModel
+@{
+    ViewData["Title"] = "Bilar";
+}
+
+<h1>Bilar</h1>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h2 class="h5">Lägg till ny bil</h2>
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <form method="post" asp-page-handler="Create" class="row g-3">
+            <div class="col-md-3">
+                <label asp-for="Input.RegistrationNumber" class="form-label"></label>
+                <input asp-for="Input.RegistrationNumber" class="form-control" />
+                <span asp-validation-for="Input.RegistrationNumber" class="text-danger"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Input.Make" class="form-label"></label>
+                <input asp-for="Input.Make" class="form-control" />
+                <span asp-validation-for="Input.Make" class="text-danger"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Input.Model" class="form-label"></label>
+                <input asp-for="Input.Model" class="form-control" />
+                <span asp-validation-for="Input.Model" class="text-danger"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Input.Year" class="form-label"></label>
+                <input asp-for="Input.Year" class="form-control" />
+                <span asp-validation-for="Input.Year" class="text-danger"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Input.Seats" class="form-label"></label>
+                <input asp-for="Input.Seats" class="form-control" />
+                <span asp-validation-for="Input.Seats" class="text-danger"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Input.DriverId" class="form-label"></label>
+                <select asp-for="Input.DriverId" class="form-select">
+                    <option value="">-- Ingen förare --</option>
+                    @foreach (var d in Model.Drivers)
+                    {
+                        <option value="@d.Id">@d.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Lägg till bil</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (!Model.Cars.Any())
+{
+    <p class="text-muted">Inga bilar registrerade än.</p>
+}
+else
+{
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Reg.nr</th>
+                <th>Märke</th>
+                <th>Modell</th>
+                <th>År</th>
+                <th>Platser</th>
+                <th>Förare</th>
+                <th>Status</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in Model.Cars)
+            {
+                <tr>
+                    <td>@c.RegistrationNumber</td>
+                    <td>@c.Make</td>
+                    <td>@c.Model</td>
+                    <td>@c.Year</td>
+                    <td>@c.Seats</td>
+                    <td>
+                        <form method="post" asp-page-handler="AssignDriver" asp-route-id="@c.Id" class="d-flex gap-2">
+                            <select name="driverId" class="form-select form-select-sm">
+                                <option value="">-- Ingen förare --</option>
+                                @foreach (var d in Model.Drivers)
+                                {
+                                    if (c.DriverId == d.Id)
+                                    {
+                                        <option value="@d.Id" selected>@d.Name</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@d.Id">@d.Name</option>
+                                    }
+                                }
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">Koppla</button>
+                        </form>
+                    </td>
+                    <td>
+                        @if (c.IsActive)
+                        {
+                            <span class="status-badge status-completed">Aktiv</span>
+                        }
+                        else
+                        {
+                            <span class="status-badge status-cancelled">Inaktiv</span>
+                        }
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group">
+                            <form method="post" asp-page-handler="Toggle" asp-route-id="@c.Id">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">Byt status</button>
+                            </form>
+                            <form method="post" asp-page-handler="Delete" asp-route-id="@c.Id"
+                                  onsubmit="return confirmDelete('Radera denna bil permanent?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Radera</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

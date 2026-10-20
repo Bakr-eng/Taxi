@@ -1,0 +1,72 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Hem";
+}
+
+<div class="p-5 mb-4 bg-body-tertiary rounded-3">
+    <div class="container-fluid py-4">
+        <h1 class="display-5 fw-bold">Välkommen till TaxiBooking</h1>
+        <p class="col-md-8 fs-5">
+            Boka en taxi enkelt online. Ange upphämtnings- och avlämningsadress,
+            få en prisuppskattning direkt, och följ status på din bokning i realtid.
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a class="btn btn-primary btn-lg" asp-page="/User/Bookings/Index">🚕 Boka en taxi</a>
+                <a class="btn btn-success btn-lg" href="tel:+46700000000">📞 Ring oss: 070-000 00 00</a>
+            }
+            else
+            {
+                <a class="btn btn-primary btn-lg" href="/Identity/Account/Register">Skapa konto</a>
+                <a class="btn btn-outline-secondary btn-lg" href="/Identity/Account/Login">Logga in</a>
+            }
+            
+        </div>
+        <p class="text-muted mt-2 mb-0">Öppet dygnet runt, alla dagar i veckan.</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <h3>🚖 Snabb bokning</h3>
+        <p>Ange bara upphämtning och destination, så sköter vi resten.</p>
+    </div>
+    <div class="col-md-4">
+        <h3>💰 Tydligt pris</h3>
+        <p>Du ser en uppskattad kostnad innan du bekräftar din resa.</p>
+    </div>
+    <div class="col-md-4">
+        <h3>📍 Status i realtid</h3>
+        <p>Följ din bokning från väntande till bekräftad och genomförd.</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-5 align-items-center">
+    <div class="col-md-6">
+        <h2>Så fungerar det</h2>
+        <ol class="fs-5">
+            <li class="mb-2">Skapa ett konto eller logga in.</li>
+            <li class="mb-2">Ange upphämtningsadress och destination.</li>
+            <li class="mb-2">Bekräfta bokningen och se prisuppskattningen.</li>
+            <li>En förare tilldelas och du kan följa resan i realtid.</li>
+        </ol>
+    </div>
+    <div class="col-md-6">
+        <h2>Vårt område</h2>
+        <p class="fs-5">
+            Vi kör i och runt <strong>Nyköping</strong>, inklusive transfer till och från
+            <strong>Stockholm Arlanda flygplats</strong>. Behöver du en pålitlig resa till
+            flyget tidigt på morgonen eller sent på kvällen? Ring oss så bokar vi in dig.
+        </p>
+    </div>
+</div>
+
+<div class="card mb-5">
+    <div class="card-body text-center py-5">
+        <h2 class="mb-3">Har du frågor eller vill boka direkt?</h2>
+        <p class="fs-5 mb-4">Vårt team svarar gärna på dina funderingar om priser, tider eller specialresor.</p>
+        <a class="btn btn-success btn-lg" href="tel:+46700000000">📞 Ring 070-000 00 00</a>
+    </div>
+</div>
