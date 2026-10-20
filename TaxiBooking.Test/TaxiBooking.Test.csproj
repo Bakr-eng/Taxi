@@ -23,4 +23,8 @@
     <Folder Include="IntegrationTest\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\src\TaxiBooking.Web\TaxiBooking.Web.csproj" />
+  </ItemGroup>
+
 </Project>
