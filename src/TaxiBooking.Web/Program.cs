@@ -10,8 +10,13 @@ using TaxiBooking.Web.Data;
 var builder = WebApplication.CreateBuilder(args);
 
 // Database
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+    throw new InvalidOperationException(
+        "ConnectionStrings:DefaultConnection is not configured. Set it via user-secrets (development) or an environment variable (production).");
+
 builder.Services.AddDbContext<TaxiBookingDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
 // Identity
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
