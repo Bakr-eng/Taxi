@@ -420,7 +420,6 @@ FodyWeavers.xsd
 #Jetbrains
 .idea/
 
-appsettings.json
 nul
 
 # SQLite WAL sidecar files, created while the app runs
