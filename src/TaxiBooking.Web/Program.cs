@@ -44,10 +44,13 @@ builder.Services.AddScoped<IDriverRepository, DriverRepository>();
 builder.Services.AddScoped<ICarRepository, CarRepository>();
 builder.Services.AddScoped<IContactMessageRepository, ContactMessageRepository>();
 
+
 // Services
 builder.Services.AddScoped<IBookingService, BookingService>();
 builder.Services.AddScoped<IDriverService, DriverService>();
 builder.Services.AddScoped<ICarService, CarService>();
+builder.Services.AddScoped<IContactService, ContactService>();
+builder.Services.AddScoped<IFareCalculator, FareCalculator>();
 
 // Razor Pages
 builder.Services.AddRazorPages();

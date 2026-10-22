@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using TaxiBooking.Application.DTOs;
 using TaxiBooking.Application.Interfaces;
 using TaxiBooking.Domain.Entities;
 
@@ -22,7 +23,7 @@ namespace TaxiBooking.Web.Pages.Admin.Drivers
             _roleManager = roleManager;
         }
 
-        public List<Driver> Drivers { get; set; } = new();
+        public List<DriverDto> Drivers { get; set; } = new();
 
         [BindProperty]
         public NewDriverInput Input { get; set; } = new();
@@ -55,9 +56,7 @@ namespace TaxiBooking.Web.Pages.Admin.Drivers
 
         public async Task OnGetAsync()
         {
-            Drivers = (await _driverService.GetAllAsync())
-                .OrderBy(d => d.Name)
-                .ToList();
+            Drivers = await _driverService.GetAllAsync();
         }
 
         public async Task<IActionResult> OnPostCreateAsync()
@@ -98,7 +97,8 @@ namespace TaxiBooking.Web.Pages.Admin.Drivers
                 await _roleManager.CreateAsync(new IdentityRole("Driver"));
 
             await _userManager.AddToRoleAsync(user, "Driver");
-            await _driverService.CreateAsync(Input.Name, Input.PhoneNumber, Input.LicenseNumber, user.Id);
+            await _driverService.CreateAsync(new CreateDriverDto(
+                Input.Name, Input.PhoneNumber, Input.LicenseNumber, user.Id));
 
             TempData["StatusMessage"] = $"Föraren {Input.Name} har lagts till och kan logga in med {Input.Email}.";
             return RedirectToPage();
@@ -106,12 +106,7 @@ namespace TaxiBooking.Web.Pages.Admin.Drivers
 
         public async Task<IActionResult> OnPostToggleAsync(int id)
         {
-            var driver = await _driverService.GetByIdAsync(id);
-            if (driver != null)
-            {
-                driver.IsAvailable = !driver.IsAvailable;
-                await _driverService.UpdateAsync(driver);
-            }
+            await _driverService.ToggleAvailabilityAsync(id);
             return RedirectToPage();
         }
 

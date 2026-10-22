@@ -1,14 +1,16 @@
+using TaxiBooking.Application.DTOs;
 using TaxiBooking.Domain.Entities;
 
 namespace TaxiBooking.Application.Interfaces
 {
     public interface IDriverService
     {
-        Task<List<Driver>> GetAllAsync();
-        Task<Driver?> GetByIdAsync(int id);
-        Task<Driver?> GetByUserIdAsync(string userId);
-        Task CreateAsync(string name, string phone, string license, string? userId = null);
-        Task UpdateAsync(Driver driver);
+        Task<List<DriverDto>> GetAllAsync();
+        Task<List<DriverDto>> GetAvailableAsync();
+        Task<DriverDto?> GetByIdAsync(int id);
+        Task<DriverDto?> GetByUserIdAsync(string userId);
+        Task CreateAsync(CreateDriverDto dto);
+        Task ToggleAvailabilityAsync(int id);
         Task DeleteAsync(int id);
     }
 }

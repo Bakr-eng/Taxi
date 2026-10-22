@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using TaxiBooking.Application.DTOs;
 using TaxiBooking.Application.Interfaces;
 using TaxiBooking.Domain.Entities;
 
@@ -19,14 +20,14 @@ namespace TaxiBooking.Web.Pages.User.Bookings
             _userManager = userManager;
         }
 
-        public Booking? Booking { get; set; }
+        public BookingDto? Booking { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int id)
         {
             var userId = _userManager.GetUserId(User)!;
-            var booking = await _bookingService.GetByIdAsync(id);
+            var booking = await _bookingService.GetByIdForUserAsync(id, userId);
 
-            if (booking == null || booking.UserId != userId)
+            if (booking == null)
             {
                 return RedirectToPage("./Index");
             }
@@ -44,9 +45,9 @@ namespace TaxiBooking.Web.Pages.User.Bookings
         public async Task<IActionResult> OnPostAsync(int id, string method)
         {
             var userId = _userManager.GetUserId(User)!;
-            var booking = await _bookingService.GetByIdAsync(id);
+            var booking = await _bookingService.GetByIdForUserAsync(id, userId);
 
-            if (booking == null || booking.UserId != userId)
+            if (booking == null)
             {
                 return RedirectToPage("./Index");
             }

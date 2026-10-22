@@ -2,8 +2,8 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using TaxiBooking.Application.DTOs;
 using TaxiBooking.Application.Interfaces;
-using TaxiBooking.Domain.Entities;
 
 namespace TaxiBooking.Web.Pages.Admin.Cars
 {
@@ -19,8 +19,8 @@ namespace TaxiBooking.Web.Pages.Admin.Cars
             _driverService = driverService;
         }
 
-        public List<Car> Cars { get; set; } = new();
-        public List<Driver> Drivers { get; set; } = new();
+        public List<CarDto> Cars { get; set; } = new();
+        public List<DriverDto> Drivers { get; set; } = new();
 
         [BindProperty]
         public NewCarInput Input { get; set; } = new();
@@ -53,12 +53,8 @@ namespace TaxiBooking.Web.Pages.Admin.Cars
 
         public async Task OnGetAsync()
         {
-            Cars = (await _carService.GetAllAsync())
-                .OrderBy(c => c.RegistrationNumber)
-                .ToList();
-            Drivers = (await _driverService.GetAllAsync())
-                .OrderBy(d => d.Name)
-                .ToList();
+            Cars = await _carService.GetAllAsync();
+            Drivers = await _driverService.GetAllAsync();
         }
 
         public async Task<IActionResult> OnPostCreateAsync()
@@ -69,13 +65,13 @@ namespace TaxiBooking.Web.Pages.Admin.Cars
                 return Page();
             }
 
-            await _carService.CreateAsync(
+            await _carService.CreateAsync(new CreateCarDto(
                 Input.RegistrationNumber,
                 Input.Make,
                 Input.Model,
                 Input.Year,
                 Input.Seats,
-                Input.DriverId);
+                Input.DriverId));
 
             TempData["StatusMessage"] = $"Bilen {Input.RegistrationNumber} har lagts till.";
             return RedirectToPage();
@@ -83,23 +79,13 @@ namespace TaxiBooking.Web.Pages.Admin.Cars
 
         public async Task<IActionResult> OnPostAssignDriverAsync(int id, int? driverId)
         {
-            var car = await _carService.GetByIdAsync(id);
-            if (car != null)
-            {
-                car.DriverId = driverId;
-                await _carService.UpdateAsync(car);
-            }
+            await _carService.AssignDriverAsync(id, driverId);
             return RedirectToPage();
         }
 
         public async Task<IActionResult> OnPostToggleAsync(int id)
         {
-            var car = await _carService.GetByIdAsync(id);
-            if (car != null)
-            {
-                car.IsActive = !car.IsActive;
-                await _carService.UpdateAsync(car);
-            }
+            await _carService.ToggleActiveAsync(id);
             return RedirectToPage();
         }
 

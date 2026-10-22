@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using TaxiBooking.Application.DTOs;
 using TaxiBooking.Application.Interfaces;
 using TaxiBooking.Domain.Entities;
 
@@ -18,17 +19,13 @@ namespace TaxiBooking.Web.Pages.Admin.Bookings
             _driverService = driverService;
         }
 
-        public List<Booking> AllBookings { get; set; } = new();
-        public List<Driver> AvailableDrivers { get; set; } = new();
+        public List<BookingDto> AllBookings { get; set; } = new();
+        public List<DriverDto> AvailableDrivers { get; set; } = new();
 
         public async Task OnGetAsync()
         {
-            AllBookings = (await _bookingService.GetAllAsync())
-                .OrderByDescending(b => b.RequestedAt)
-                .ToList();
-            AvailableDrivers = (await _driverService.GetAllAsync())
-                .Where(d => d.IsAvailable)
-                .ToList();
+            AllBookings = await _bookingService.GetAllAsync();
+            AvailableDrivers = await _driverService.GetAvailableAsync();
         }
 
         public async Task<IActionResult> OnPostAssignAsync(int bookingId, int driverId)

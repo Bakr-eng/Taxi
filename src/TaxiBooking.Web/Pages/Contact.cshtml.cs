@@ -1,18 +1,18 @@
-using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.ComponentModel.DataAnnotations;
+using TaxiBooking.Application.DTOs;
 using TaxiBooking.Application.Interfaces;
-using TaxiBooking.Domain.Entities;
 
 namespace TaxiBooking.Web.Pages
 {
     public class ContactModel : PageModel
     {
-        private readonly IContactMessageRepository _contactRepo;
+        private readonly IContactService _contactService;
 
-        public ContactModel(IContactMessageRepository contactRepo)
+        public ContactModel(IContactService contactService)
         {
-            _contactRepo = contactRepo;
+            _contactService = contactService;
         }
 
         [BindProperty]
@@ -47,14 +47,7 @@ namespace TaxiBooking.Web.Pages
                 return Page();
             }
 
-            var message = new ContactMessage
-            {
-                Name = Input.Name,
-                Email = Input.Email,
-                Message = Input.Message,
-                SentAt = DateTime.UtcNow
-            };
-            await _contactRepo.AddAsync(message);
+            await _contactService.SendAsync(new CreateContactMessageDto(Input.Name, Input.Email, Input.Message));
 
             Sent = true;
             Input = new ContactInput();

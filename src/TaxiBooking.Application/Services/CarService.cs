@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
+using TaxiBooking.Application.DTOs;
 using TaxiBooking.Application.Interfaces;
-using TaxiBooking.Domain.Entities;
+using TaxiBooking.Application.Mappings;
 
 namespace TaxiBooking.Application.Services
 {
@@ -15,30 +16,33 @@ namespace TaxiBooking.Application.Services
             _logger = logger;
         }
 
-        public async Task<List<Car>> GetAllAsync()
-            => await _repo.GetAllAsync();
+        public async Task<List<CarDto>> GetAllAsync()
+            => (await _repo.GetAllAsync())
+                .OrderBy(c => c.RegistrationNumber)
+                .Select(c => c.ToDto())
+                .ToList();
 
-        public async Task<Car?> GetByIdAsync(int id)
-            => await _repo.GetByIdAsync(id);
-
-        public async Task CreateAsync(string registrationNumber, string make, string model, int year, int seats, int? driverId = null)
+        public async Task CreateAsync(CreateCarDto dto)
         {
-            var car = new Car
-            {
-                RegistrationNumber = registrationNumber,
-                Make = make,
-                Model = model,
-                Year = year,
-                Seats = seats,
-                DriverId = driverId,
-                IsActive = true
-            };
-            await _repo.AddAsync(car);
-            _logger.LogInformation("Car {RegNr} created", registrationNumber);
+            await _repo.AddAsync(dto.ToEntity());
+            _logger.LogInformation("Car {RegNr} created", dto.RegistrationNumber);
         }
 
-        public async Task UpdateAsync(Car car)
-            => await _repo.UpdateAsync(car);
+        public async Task AssignDriverAsync(int id, int? driverId)
+        {
+            var car = await _repo.GetByIdAsync(id);
+            if (car == null) return;
+            car.DriverId = driverId;
+            await _repo.UpdateAsync(car);
+        }
+
+        public async Task ToggleActiveAsync(int id)
+        {
+            var car = await _repo.GetByIdAsync(id);
+            if (car == null) return;
+            car.IsActive = !car.IsActive;
+            await _repo.UpdateAsync(car);
+        }
 
         public async Task DeleteAsync(int id)
         {

@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Logging;
+using TaxiBooking.Application.DTOs;
 using TaxiBooking.Application.Interfaces;
+using TaxiBooking.Application.Mappings;
 using TaxiBooking.Domain.Entities;
 
 namespace TaxiBooking.Application.Services
@@ -7,60 +9,72 @@ namespace TaxiBooking.Application.Services
     public class BookingService : IBookingService
     {
         private readonly IBookingRepository _repo;
+        private readonly IFareCalculator _fareCalculator;
         private readonly ILogger<BookingService> _logger;
 
-        public BookingService(IBookingRepository repo, ILogger<BookingService> logger)
+        public BookingService(IBookingRepository repo, IFareCalculator fareCalculator, ILogger<BookingService> logger)
         {
             _repo = repo;
+            _fareCalculator = fareCalculator;
             _logger = logger;
         }
 
-        public async Task<List<Booking>> GetAllAsync()
-            => await _repo.GetAllAsync();
+        public async Task<List<BookingDto>> GetAllAsync()
+            => (await _repo.GetAllAsync())
+                .OrderByDescending(b => b.RequestedAt)
+                .Select(b => b.ToDto())
+                .ToList();
 
-        public async Task<List<Booking>> GetByUserIdAsync(string userId)
-            => await _repo.GetByUserIdAsync(userId);
+        public async Task<List<BookingDto>> GetByUserIdAsync(string userId)
+            => (await _repo.GetByUserIdAsync(userId))
+                .OrderByDescending(b => b.RequestedAt)
+                .Select(b => b.ToDto())
+                .ToList();
 
-        public async Task<List<Booking>> GetByDriverIdAsync(int driverId)
-            => await _repo.GetByDriverIdAsync(driverId);
+        public async Task<List<BookingDto>> GetForDriverAsync(int driverId)
+            => (await _repo.GetByDriverIdAsync(driverId))
+                .Where(b => b.Status is BookingStatus.Confirmed or BookingStatus.Completed)
+                .OrderBy(b => b.PickupTime)
+                .Select(b => b.ToDto())
+                .ToList();
 
-        public async Task<Booking?> GetByIdAsync(int id)
-            => await _repo.GetByIdAsync(id);
-
-        public async Task<int> CreateAsync(
-            string userId,
-            string contactName,
-            string contactPhone,
-            string contactEmail,
-            string pickup,
-            string dropoff,
-            DateTime pickupTime,
-            bool hasAllergy,
-            bool hasIllness,
-            string? specialNeedsNote,
-            string? message,
-            decimal fare)
+        public async Task<BookingDto?> GetByIdForUserAsync(int id, string userId)
         {
-            var booking = new Booking
-            {
-                UserId = userId,
-                ContactName = contactName,
-                ContactPhone = contactPhone,
-                ContactEmail = contactEmail,
-                PickupAddress = pickup,
-                DropoffAddress = dropoff,
-                PickupTime = pickupTime,
-                HasAllergy = hasAllergy,
-                HasIllness = hasIllness,
-                SpecialNeedsNote = specialNeedsNote,
-                Message = message,
-                EstimatedFare = fare,
-                RequestedAt = DateTime.UtcNow,
-                Status = BookingStatus.Pending
-            };
+            var booking = await _repo.GetByIdAsync(id);
+            return booking?.UserId == userId ? booking.ToDto() : null;
+        }
+
+        public async Task<int> CreateAsync(CreateBookingDto dto)
+        {
+            var fare = _fareCalculator.Estimate(dto.PickupAddress, dto.DropoffAddress, dto.DistanceKm, dto.DurationMinutes);
+            var booking = dto.ToEntity(fare);
             await _repo.AddAsync(booking);
-            _logger.LogInformation("Booking created for user {UserId}, pickup {Pickup}", userId, pickup);
+            _logger.LogInformation("Booking created for user {UserId}, pickup {Pickup}", dto.UserId, dto.PickupAddress);
             return booking.Id;
+        }
+
+        public async Task<bool> CancelAsync(int id, string userId)
+        {
+            var booking = await _repo.GetByIdAsync(id);
+            if (booking == null || booking.UserId != userId || booking.Status != BookingStatus.Pending)
+                return false;
+
+            booking.Status = BookingStatus.Cancelled;
+            await _repo.UpdateAsync(booking);
+            _logger.LogInformation("Booking {BookingId} cancelled by user", id);
+            return true;
+        }
+
+        public async Task<bool> CompleteAsync(int id, int driverId)
+        {
+            var booking = await _repo.GetByIdAsync(id);
+            if (booking == null || booking.DriverId != driverId || booking.Status != BookingStatus.Confirmed)
+                return false;
+
+            booking.Status = BookingStatus.Completed;
+            await _repo.UpdateAsync(booking);
+            _logger.LogInformation("Booking {BookingId} completed by driver {DriverId}", id, driverId);
+            return true;
         }
 
         public async Task<bool> SetPaymentAsync(int id, PaymentMethod method, bool isPaid, string? paymentReference = null)

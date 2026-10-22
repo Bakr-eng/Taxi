@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using TaxiBooking.Application.DTOs;
 using TaxiBooking.Application.Interfaces;
 using TaxiBooking.Domain.Entities;
 
@@ -21,8 +22,8 @@ namespace TaxiBooking.Web.Pages.DriverPortal
             _userManager = userManager;
         }
 
-        public Driver? MyDriverProfile { get; set; }
-        public List<Booking> MyBookings { get; set; } = new();
+        public DriverDto? MyDriverProfile { get; set; }
+        public List<BookingDto> MyBookings { get; set; } = new();
 
         public async Task OnGetAsync()
         {
@@ -31,25 +32,17 @@ namespace TaxiBooking.Web.Pages.DriverPortal
 
             if (MyDriverProfile != null)
             {
-                MyBookings = (await _bookingService.GetByDriverIdAsync(MyDriverProfile.Id))
-                    .Where(b => b.Status is BookingStatus.Confirmed or BookingStatus.Completed)
-                    .OrderBy(b => b.PickupTime)
-                    .ToList();
+                MyBookings = await _bookingService.GetForDriverAsync(MyDriverProfile.Id);
             }
         }
 
         public async Task<IActionResult> OnPostCompleteAsync(int id)
         {
             var userId = _userManager.GetUserId(User)!;
-            MyDriverProfile = await _driverService.GetByUserIdAsync(userId);
+            var driver = await _driverService.GetByUserIdAsync(userId);
 
-            if (MyDriverProfile == null)
-                return RedirectToPage();
-
-            var booking = await _bookingService.GetByIdAsync(id);
-            if (booking != null && booking.DriverId == MyDriverProfile.Id && booking.Status == BookingStatus.Confirmed)
+            if (driver != null && await _bookingService.CompleteAsync(id, driver.Id))
             {
-                await _bookingService.UpdateStatusAsync(id, BookingStatus.Completed);
                 TempData["StatusMessage"] = "Körningen har markerats som slutförd.";
             }
 

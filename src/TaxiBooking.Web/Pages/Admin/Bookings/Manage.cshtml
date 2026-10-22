@@ -40,7 +40,7 @@ else
                 <tr>
                     <td>@b.Id</td>
                     <td>
-                        @(string.IsNullOrWhiteSpace(b.ContactName) ? (b.User?.Name ?? b.UserId) : b.ContactName)
+                        @(string.IsNullOrWhiteSpace(b.ContactName) ? (b.UserName ?? b.UserId) : b.ContactName)
                         <div class="text-muted small">@b.ContactPhone</div>
                         <div class="text-muted small">@b.ContactEmail</div>
                     </td>
@@ -55,9 +55,9 @@ else
                     <td>@b.EstimatedFare.ToString("0.00") kr</td>
                     <td><span class="status-badge @statusClass">@b.Status</span></td>
                     <td>
-                        @if (b.Driver != null)
+                        @if (b.DriverName != null)
                         {
-                            @b.Driver.Name
+                            @b.DriverName
                         }
                         else if (b.Status == BookingStatus.Pending)
                         {
